@@ -129,6 +129,7 @@ static void ttd_update_size_info(GF_TTXTDec *ctx)
 		}
 		gf_sg_get_scene_size_info(ctx->scenegraph, &w, &h);
 		if (!w || !h) return;
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, (" dec_ttxt 1\n"));
 		gf_scene_force_size(ctx->scene, w, h);
 	}
 
@@ -153,6 +154,7 @@ static void ttd_update_size_info(GF_TTXTDec *ctx)
 		}
 		if (set_size) {
 			gf_sg_set_scene_size_info(ctx->scenegraph, w, h, GF_TRUE);
+			GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, (" dec_ttxt 2\n"));
 			gf_scene_force_size(ctx->scene, w, h);
 		}
 	} else {

@@ -1,0 +1,20 @@
+{
+    "files.associations": {
+        "xutility": "c",
+        "*.idl": "c",
+        "cmath": "c",
+        "nodes_stacks.h": "c",
+        "visual_manager.h": "c",
+        "options.h": "c",
+        "compositor_dev.h": "c",
+        "user.h": "c",
+        "base_coding.h": "c",
+        "type_traits": "c",
+        "xlocnum": "c",
+        "xtr1common": "c",
+        "system_error": "c",
+        "xlocale": "c",
+        "sstream": "c",
+        "xiosbase": "c"
+    }
+}

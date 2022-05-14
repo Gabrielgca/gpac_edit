@@ -2039,11 +2039,11 @@ Bool gf_sc_exec_event(GF_Compositor *compositor, GF_Event *evt)
     else {
         forward_event(compositor, evt, ret);
     }
-        
 	if (!ret) {
 		/*process navigation events*/
 		if (compositor->interaction_level & GF_INTERACT_NAVIGATION)
 			ret = compositor_handle_navigation(compositor, evt);
+		
 	}
 	return ret;
 }

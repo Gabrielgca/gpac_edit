@@ -1650,12 +1650,17 @@ void gf_mo_hint_quality_degradation(GF_MediaObject *mo, u32 quality_degradation)
 
 void gf_mo_hint_visible_rect(GF_MediaObject *mo, u32 min_x, u32 max_x, u32 min_y, u32 max_y)
 {
+	//GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[COMPOSE - GABRIEL] before return"));
+	
 	if (!mo || !mo->odm || !mo->odm->pid) {
 		return;
 	}
 
-	if ((mo->view_min_x!=min_x) || (mo->view_max_x!=max_x) || (mo->view_min_y!=min_y) || (mo->view_max_y!=max_y)) {
+	//GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[COMPOSE - GABRIEL] before if condition"));
+
+	//if ((mo->view_min_x!=min_x) || (mo->view_max_x!=max_x) || (mo->view_min_y!=min_y) || (mo->view_max_y!=max_y)) {
 		GF_FilterEvent evt;
+		//GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[COMPOSE - GABRIEL] visibility hit from gf_mo_hint_visible_rect"));
 		GF_FEVT_INIT(evt, GF_FEVT_VISIBILITY_HINT, mo->odm->pid);
 		mo->view_min_x = min_x;
 		mo->view_max_x = max_x;
@@ -1668,7 +1673,7 @@ void gf_mo_hint_visible_rect(GF_MediaObject *mo, u32 min_x, u32 max_x, u32 min_y
 		evt.visibility_hint.max_y = max_y;
 
 		gf_filter_pid_send_event(mo->odm->pid, &evt);
-	}
+	//}
 }
 
 void gf_mo_hint_gaze(GF_MediaObject *mo, u32 gaze_x, u32 gaze_y)
@@ -1679,6 +1684,7 @@ void gf_mo_hint_gaze(GF_MediaObject *mo, u32 gaze_x, u32 gaze_y)
 
 	if ((mo->view_min_x!=gaze_x) || (mo->view_min_y!=gaze_y) ) {
 		GF_FilterEvent evt;
+		GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] visibility hit from gf_mo_hint_gaze"));
 		GF_FEVT_INIT(evt, GF_FEVT_VISIBILITY_HINT, mo->odm->pid);
 		mo->view_min_x = gaze_x;
 		mo->view_min_y = gaze_y;

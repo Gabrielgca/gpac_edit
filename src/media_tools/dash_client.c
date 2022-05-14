@@ -92,6 +92,9 @@ struct __dash_client
 	Bool keep_files, disable_switching, allow_local_mpd_update, estimate_utc_drift, ntp_forced;
 	Bool is_m3u8, is_smooth;
 	Bool split_adaptation_set;
+
+	Bool is_frame_with_cp;
+
 	GF_DASHLowLatencyMode low_latency_mode;
 	//set when MPD downloading fails. Will resetup DASH live once MPD is sync again
 	Bool in_error;
@@ -247,6 +250,25 @@ typedef enum
 struct __dash_group
 {
 	GF_DashClient *dash;
+
+	/*! Center of the viewport x coord*/
+	Float center_viewport_x;
+	/*! Center of the viewport y coord*/
+	Float center_viewport_y;
+	/*! Center of the viewport yaw angle*/
+	Float yaw;
+	/*! Center of the viewport pitch angle*/
+	Float pitch;
+
+	/*List of the x center of the viewport on the last frame*/
+	char list_cvp_x_per_frame[500];
+
+	/*List of the x center of the viewport on the last frame*/
+	char list_result_cvp_x_per_frame[500];
+
+	u32 count_cvp_x;
+	/*List of the y center of the viewport on the last frame*/
+	GF_List *list_cvp_y_per_frame;
 
 	/*pointer to adaptation set*/
 	GF_MPD_AdaptationSet *adaptation_set;
@@ -4210,6 +4232,10 @@ static s32 dash_do_rate_adaptation_bola(GF_DashClient *dash, GF_DASH_Group *grou
 	min_rep = gf_list_get(group->adaptation_set->representations, 0);
 	max_rep = gf_list_get(group->adaptation_set->representations, nb_reps - 1);
 
+	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] BOLA: Number of representations: %d\n", nb_reps));
+
+	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] BOLA algorithm : %d\n", dash->adaptation_algorithm));
+
 	// Computing the log-based utility of each segment (recomputing each time for period changes)
 	for (k = 0; k < nb_reps; k++) {
 		GF_MPD_Representation *a_rep = gf_list_get(group->adaptation_set->representations, k);
@@ -4236,6 +4262,10 @@ static s32 dash_do_rate_adaptation_bola(GF_DashClient *dash, GF_DASH_Group *grou
 		Double V_D;
 		Double N = dash->mpd->media_presentation_duration / p;
 
+		GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] BOLA: Media Presentation Duration: %d\n", dash->mpd->media_presentation_duration));
+
+		GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] BOLA: Group Current Index: %d\n", group->current_index));
+
 		t_bgn = p*group->current_index;
 		t_end = (N - group->current_index)*p;
 		t = MIN(t_bgn, t_end);
@@ -4247,12 +4277,15 @@ static s32 dash_do_rate_adaptation_bola(GF_DashClient *dash, GF_DASH_Group *grou
 
 		if (dash->adaptation_algorithm == GF_DASH_ALGO_BOLA_U || dash->adaptation_algorithm == GF_DASH_ALGO_BOLA_O) {
 			//Bola U algorithm
+			GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] BOLA: Minimum Representation Bandwidth: %d\n", min_rep->bandwidth));
 			if ((new_index != -1) && ((u32)new_index > group->active_rep_index)) {
 				u32 r = group->bytes_per_sec*8;
 
 				// index_prime the min m such that (Sm[m]/p)<= max(bandwidth_previous,S_M/p))
 				// NOTE in BOLA, representation indices decrease when the quality increases [1 = best quality]
 				u32 m_prime = 0;
+
+				
 				get_max_rate_below(group->adaptation_set->representations, MAX(r, min_rep->bandwidth), &m_prime);
 				if (m_prime >= (u32)new_index) {
 					m_prime = new_index;
@@ -4409,6 +4442,7 @@ static void dash_do_rate_adaptation(GF_DashClient *dash, GF_DASH_Group *group)
 
 	TODO: document how to access other possible parameters (e.g. segment sizes if available, ...)
 	*/
+	//Gabriel
 	new_index = group->active_rep_index;
 	if (dash->rate_adaptation_algo) {
 		new_index = dash->rate_adaptation_algo(dash, group, base_group,
@@ -8197,6 +8231,11 @@ static s32 dash_do_rate_adaptation_custom(GF_DashClient *dash, GF_DASH_Group *gr
 	stats.max_available_speed = max_available_speed;
 	stats.display_width = group->hint_visible_width;
 	stats.display_height = group->hint_visible_height;
+	stats.center_viewport_x = group->center_viewport_x;
+	stats.center_viewport_y = group->center_viewport_y;
+	strcpy(stats.list_cvp_x_per_frame, group->list_result_cvp_x_per_frame);
+	stats.yaw = group->yaw;
+	stats.pitch = group->pitch;
 	stats.active_quality_idx = group->active_rep_index;
 	stats.buffer_min_ms = group->buffer_min_ms;
 	stats.buffer_max_ms = group->buffer_max_ms;
@@ -9965,19 +10004,81 @@ GF_Err gf_dash_group_set_visible_rect(GF_DashClient *dash, u32 idx, u32 min_x, u
 {
 	u32 i, count;
 	GF_DASH_Group *group = gf_list_get(dash->groups, idx);
+	GF_MPD_Representation *rep = gf_list_get(group->adaptation_set->representations, idx);
+	group->done = GF_FALSE;
+
+	if (group->list_cvp_x_per_frame[0] == '/0'){
+		group->count_cvp_x = 0;
+	}
 	if (!group) return GF_BAD_PARAM;
 
 	if (!min_x && !max_x && !min_y && !max_y) {
 		group->quality_degradation_hint = 0;
 	}
 
+	Float cvp_x, cvp_y;
+
+	cvp_x = min_x > max_x ? min_x + (rep->width + max_x - min_x)/2 : min_x + (max_x - min_x)/2;
+
+	cvp_y = min_y > max_y ? min_y + (rep->height + max_y - min_y)/2 :  min_y + (max_y - min_y)/2;
+
+
+	cvp_x = cvp_x > rep->width ? cvp_x - rep->width : cvp_x;
+	cvp_y = cvp_y > rep->height ? cvp_y - rep->height : cvp_y;
+
+	Float yaw, pitch;
+
+
+	//yaw = (Float) ((cvp_x + 0.5) / rep->width - 0.5) * 2 * 360;
+	//pitch = (Float) -1*((cvp_y + 0.5) / rep->height - 0.5) * 180;
+
+	convert_pixel_coord_to_angle(cvp_x, cvp_y, rep->width, rep->height, &yaw, &pitch);
+	
+	
+	
 	//for both regular or tiled, store visible width/height
 	group->hint_visible_width = max_x - min_x;
 	group->hint_visible_height = max_y - min_y;
 
+	group->center_viewport_x = cvp_x;
+	group->center_viewport_y = cvp_y;
+
+	char aux_list_cvp_x_per_frame [500];
+
+	memset(aux_list_cvp_x_per_frame,'\0',500);
+	strcpy(aux_list_cvp_x_per_frame, group->list_cvp_x_per_frame);
+	sprintf(group->list_cvp_x_per_frame, "%.2f,", cvp_x);
+	strcat(aux_list_cvp_x_per_frame, group->list_cvp_x_per_frame);
+	strcpy(group->list_cvp_x_per_frame, aux_list_cvp_x_per_frame);
+
+	memset(aux_list_cvp_x_per_frame,'\0',500);
+
+	group->count_cvp_x++;
+
+	if (group->count_cvp_x == rep->framerate->num) 
+	{
+		group->count_cvp_x = 0;
+		strcpy(group->list_result_cvp_x_per_frame, group->list_cvp_x_per_frame);
+		group->list_result_cvp_x_per_frame[strlen(group->list_result_cvp_x_per_frame)-2] = '\0';
+		memset(group->list_cvp_x_per_frame,'\0', sizeof(group->list_cvp_x_per_frame));
+	}
+	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] List Viewport: [%.*s]\n",(int) sizeof(group->list_cvp_x_per_frame), group->list_cvp_x_per_frame));
+
+
+	group->yaw = yaw;
+	group->pitch = pitch;
+
 	if (!group->groups_depending_on) return GF_OK;
 
-	GF_LOG(GF_LOG_DEBUG, GF_LOG_DASH, ("[DASH] Group Visible rect %d,%d,%d,%d \n", min_x, max_x, min_y, max_y));
+	
+	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] Video Resolution: (%d, %d) \n", rep->width, rep->height));
+	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] FPS framerate : (%d/%d)\n", rep->framerate->num, rep->framerate->den));
+	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH] Group Visible rect %d,%d,%d,%d \n", min_x, max_x, min_y, max_y));
+	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] Center of Viewport: (%.2f, %.2f) \n", cvp_x , cvp_y));
+	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] Center of Viewport Angles: (%.2f graus, %.2f graus) \n", yaw , pitch));
+
+
+
 	count = gf_list_count(group->groups_depending_on);
 	for (i=0; i<count; i++) {
 		Bool is_visible = GF_TRUE;
@@ -10021,6 +10122,12 @@ GF_Err gf_dash_group_set_visible_rect(GF_DashClient *dash, u32 idx, u32 min_x, u
 		}
 	}
 	return GF_OK;
+}
+
+void convert_pixel_coord_to_angle(Float cvp_x, Float cvp_y, u32 width, u32 height, Float *yaw,  Float *pitch)
+{
+        *yaw = (Float) ((cvp_x + 0.5f) / width - 0.5f) * 360;
+        *pitch = (Float) -1*((cvp_y + 0.5f) / height - 0.5f) * 180;
 }
 
 void gf_dash_set_group_download_state(GF_DashClient *dash, u32 idx, u32 cur_dep_idx, GF_Err err)

@@ -257,6 +257,7 @@ typedef enum {
 
 	GF_EVENT_SENSOR_ORIENTATION,
 	GF_EVENT_SENSOR_REQUEST,
+	GF_EVENT_EDIT,
 } GF_EventType;
 
 /*! GPAC/DOM3 key codes*/

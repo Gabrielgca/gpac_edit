@@ -88,6 +88,7 @@ void ttmldec_update_size_info(GF_TTMLDec *ctx)
 		if (!h) h = ctx->txth;
 
 		gf_sg_set_scene_size_info(ctx->scenegraph, w, h, GF_TRUE);
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, (" dec_ttml\n"));
 		gf_scene_force_size(ctx->scene, w, h);
 	}
 

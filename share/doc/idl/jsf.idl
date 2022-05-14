@@ -955,6 +955,8 @@ attribute unsigned long move_relative;
 attribute unsigned long move_alignx;
 /*! see \ref GF_EventMove*/
 attribute unsigned long move_aligny;
+/*! see \ref GF_EventEdit*/
+attribute unsigned long edit_rotation;
 
 };
 

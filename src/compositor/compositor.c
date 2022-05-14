@@ -2551,6 +2551,7 @@ void gf_sc_render_frame(GF_Compositor *compositor)
 			gf_dom_event_fire(qev->node, &qev->dom_evt);
 #endif
 		} else {
+			GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("gf_sc_render_frame\n"));
 			gf_sc_exec_event(compositor, &qev->evt);
 		}
 		gf_free(qev);
@@ -2576,7 +2577,7 @@ void gf_sc_render_frame(GF_Compositor *compositor)
 	compositor->frame_delay = 0;
 	compositor->ms_until_next_frame = GF_INT_MAX;
 	frame_duration = compositor->frame_duration;
-
+	//compositor->auto_rotate=2;
 	if (compositor->auto_rotate)
 		compositor_handle_auto_navigation(compositor);
 
@@ -2995,10 +2996,10 @@ void gf_sc_render_frame(GF_Compositor *compositor)
 					assert(res>=compositor->scene_sampled_clock);
 					compositor->scene_sampled_clock = (u32) res;
 				}
-				GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[Compositor] Send video frame TS %u (%u ms) - next frame scene clock %d ms - passthrough %p\n", frame_ts, (frame_ts*1000)/compositor->fps.num, compositor->scene_sampled_clock, compositor->passthrough_txh));
+				//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[Compositor] Send video frame TS %u (%u ms) - next frame scene clock %d ms - passthrough %p\n", frame_ts, (frame_ts*1000)/compositor->fps.num, compositor->scene_sampled_clock, compositor->passthrough_txh));
 				compositor->frame_was_produced = GF_TRUE;
 			} else {
-				GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[Compositor] Send video frame TS %u - AR clock %d\n", frame_ts, compositor->audio_renderer->current_time));
+				//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[Compositor] Send video frame TS %u - AR clock %d\n", frame_ts, compositor->audio_renderer->current_time));
 			 	if (compositor->bench_mode) {
 					compositor->force_bench_frame = 1;
 				}
@@ -3373,6 +3374,7 @@ static Bool gf_sc_handle_event_intern(GF_Compositor *compositor, GF_Event *event
 		}
 	*/
 	gf_mx_p(compositor->mx);
+	//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("gf_sc_handle_event_intern\n"));
 	ret = gf_sc_exec_event(compositor, event);
 	gf_sc_lock(compositor, GF_FALSE);
 
@@ -3393,11 +3395,15 @@ void gf_sc_traverse_subscene(GF_Compositor *compositor, GF_Node *inline_parent, 
 }
 
 static Bool gf_sc_on_event_ex(GF_Compositor *compositor , GF_Event *event, Bool from_user)
-{
+{	
 	/*not assigned yet*/
-	if (!compositor || !compositor->visual || compositor->discard_input_events) return GF_FALSE;
+	if (!compositor || !compositor->visual || compositor->discard_input_events) {
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("!compositor || !compositor->visual || compositor->discard_input_events\n"));
+	return GF_FALSE;
+	}
 	/*we're reconfiguring the video output, cancel all messages except GL reconfig (context lost)*/
 	if (compositor->msg_type & GF_SR_IN_RECONFIG) {
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("compositor->msg_type & GF_SR_IN_RECONFIG\n"));
 		if (event->type==GF_EVENT_VIDEO_SETUP) {
 			if (event->setup.hw_reset)
 				gf_sc_reset_graphics(compositor);
@@ -3408,6 +3414,11 @@ static Bool gf_sc_on_event_ex(GF_Compositor *compositor , GF_Event *event, Bool 
 		return GF_FALSE;
 	}
 	switch (event->type) {
+	case GF_EVENT_EDIT:
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("EDIT EVENT FROM UI!!\n"));
+		//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("EDIT ROTATION: %d\n", event->edit.rotation));
+		compositor_handle_navigation(compositor, event);
+		break;
 	case GF_EVENT_SHOWHIDE:
 		if (!from_user) {
 			/*switch fullscreen off!!!*/

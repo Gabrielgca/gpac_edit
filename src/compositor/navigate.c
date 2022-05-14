@@ -166,7 +166,7 @@ static void view_pan_y(GF_Compositor *compositor, GF_Camera *cam, Fixed dy)
 
 /*for translation moves when jumping*/
 #define JUMP_SCALE_FACTOR	4
-
+//Gabriel
 static void view_translate_x(GF_Compositor *compositor, GF_Camera *cam, Fixed dx)
 {
 	SFVec3f v;
@@ -291,31 +291,36 @@ static void handle_mouse_move_3d(GF_Compositor *compositor, GF_Camera *cam, u32 
 	Fixed trans_scale = cam->width/20;
 	//if default VP is quite far from center use larger dz/dy moves
 	if (cam->vp_dist>100) trans_scale *= 10;
-
+	
 	switch (cam->navigate_mode) {
 	/*FIXME- we'll likely need a "step" value for walk at some point*/
 	case GF_NAVIGATE_WALK:
 	case GF_NAVIGATE_FLY:
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("GF_NAVIGATE_FLY or GF_NAVIGATE_WALK\n"));
 		view_pan_x(compositor, cam, -dx);
 		if (keys & GF_KEY_MOD_CTRL) view_pan_y(compositor, cam, dy);
 		else view_translate_z(compositor, cam, gf_mulfix(dy, trans_scale));
 		break;
 	case GF_NAVIGATE_VR:
+		//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("GF_NAVIGATE_VR\n"));
 		view_pan_x(compositor, cam, -dx);
 		if (keys & GF_KEY_MOD_CTRL) view_zoom(compositor, cam, dy);
 		else view_pan_y(compositor, cam, dy);
 		break;
 	case GF_NAVIGATE_PAN:
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("GF_NAVIGATE_PAN\n"));
 		view_pan_x(compositor, cam, -dx);
 		if (keys & GF_KEY_MOD_CTRL) view_translate_z(compositor, cam, gf_mulfix(dy, trans_scale));
 		else view_pan_y(compositor, cam, dy);
 		break;
 	case GF_NAVIGATE_SLIDE:
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("GF_NAVIGATE_SLIDE\n"));
 		view_translate_x(compositor, cam, gf_mulfix(dx, trans_scale));
 		if (keys & GF_KEY_MOD_CTRL) view_translate_z(compositor, cam, gf_mulfix(dy, trans_scale));
 		else view_translate_y(compositor, cam, gf_mulfix(dy, trans_scale));
 		break;
 	case GF_NAVIGATE_EXAMINE:
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("GF_NAVIGATE_EXAMINE\n"));
 		if (keys & GF_KEY_MOD_CTRL) {
 			view_translate_z(compositor, cam, gf_mulfix(dy, trans_scale));
 			view_roll(compositor, cam, gf_mulfix(dx, trans_scale));
@@ -328,6 +333,7 @@ static void handle_mouse_move_3d(GF_Compositor *compositor, GF_Camera *cam, u32 
 		}
 		break;
 	case GF_NAVIGATE_ORBIT:
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("GF_NAVIGATE_ORBIT\n"));
 		if (keys & GF_KEY_MOD_CTRL) {
 			view_translate_z(compositor, cam, gf_mulfix(dy, trans_scale));
 		} else {
@@ -336,6 +342,7 @@ static void handle_mouse_move_3d(GF_Compositor *compositor, GF_Camera *cam, u32 
 		}
 		break;
 	case GF_NAVIGATE_GAME:
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("GF_NAVIGATE_GAME\n"));
 		view_pan_x(compositor, cam, -dx);
 		view_pan_y(compositor, cam, dy);
 		break;
@@ -369,13 +376,23 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 	if (!cam->navigate_mode && !(keys & GF_KEY_MOD_ALT) ) return 0;
 	x = y = 0;
 	/*renorm between -1, 1*/
+	
 	if (ev->type<=GF_EVENT_MOUSEWHEEL) {
 		x = gf_divfix( INT2FIX(ev->mouse.x - (s32) compositor->visual->width/2), INT2FIX(compositor->visual->width));
 		y = gf_divfix( INT2FIX(ev->mouse.y - (s32) compositor->visual->height/2), INT2FIX(compositor->visual->height));
 	}
 
+	//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("X coordenation: %.3f - y coordenation: %.3f\n", compositor->grab_x, compositor->grab_y));
+
+	//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[vp] X coordenation: %f - y coordenation: %f\n", cam->vp.x, cam->vp.y));
+	//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[target] X coordenation: %.2f - y coordenation: %.2f\n - z coordenation: %.2f\n", cam->target.x, cam->target.y, cam->target.z));
+	
+	//compositor->auto_rotate=2;
 	dx = (x - compositor->grab_x);
 	dy = (compositor->grab_y - y);
+
+
+	//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[dx-dy] dx: %.2f - dy: %.2f\n", dx, dy));
 
 	trans_scale = cam->width/20;
 	key_trans = cam->avatar_size.x/2;
@@ -406,7 +423,15 @@ static Bool compositor_handle_navigation_3d(GF_Compositor *compositor, GF_Event 
 		compositor->audio_renderer->roll = roll;
 	}
 
+
+
+	
+	
 	switch (ev->type) {
+	case GF_EVENT_EDIT:
+		view_pan_x(compositor, cam, ev->edit.rotation);
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("Edit Done!!\n"));
+		break;
 	case GF_EVENT_MOUSEDOWN:
 		/*left*/
 		if (ev->mouse.button==GF_MOUSE_LEFT) {

@@ -994,6 +994,7 @@ GF_Err gf_dash_group_set_quality_degradation_hint(GF_DashClient *dash, u32 group
 */
 GF_Err gf_dash_group_set_visible_rect(GF_DashClient *dash, u32 group_idx, u32 min_x, u32 max_x, u32 min_y, u32 max_y, Bool is_gaze);
 
+void convert_pixel_coord_to_angle(Float cvp_x, Float cvp_y, u32 width, u32 height, Float *yaw,  Float *pitch);
 /*! Ignores xlink on periods if some adaptation sets are specified in the period with xlink
 \param dash the target dash client
 \param ignore_xlink if GF_TRUE? xlinks will be ignored on periods containing both xlinks and adaptation sets
@@ -1120,8 +1121,22 @@ typedef struct
 	u32 buffer_occupancy_ms;
 	/*! degradation hint, 0 means no degradation, 100 means tile completely hidden*/
 	u32 quality_degradation_hint;
+	/*! width of the visible video in the viewport*/
+	u32 hint_visible_width;
+	/*! height of the visible video in the viewport*/
+	u32 hint_visible_height;
+	/*! Center of the viewport x coord*/
+	Float center_viewport_x;
+	/*! Center of the viewport y coord*/
+	Float center_viewport_y;
+	/*! Center of the viewport yaw angle*/
+	Float yaw;
+	/*! Center of the viewport pitch angle*/
+	Float pitch;
 	/*! cumulated download rate of all active groups - 0 means all files are local*/
 	u32 total_rate;
+	/*List of the x center of the viewport on the last frame*/
+	char list_cvp_x_per_frame[500];
 } GF_DASHCustomAlgoInfo;
 
 /*! Callback function for custom rate adaptation

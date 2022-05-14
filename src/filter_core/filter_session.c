@@ -4071,15 +4071,24 @@ Bool gf_fs_fire_event(GF_FilterSession *fs, GF_Filter *f, GF_FilterEvent *evt, B
 {
 	Bool ret = GF_FALSE;
 	if (!fs || !evt) return GF_FALSE;
-
+	GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("FIRE EVENT FROM C!!!\n"));
+	GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("EVT INFO: %d\n", evt->user_event.event.edit.rotation));
+	//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("FILTER INFO: %s\n", f->name));
+	//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("evt->base.type: %d\n", evt->base.type));
+	
 	GF_FilterPid *on_pid = evt->base.on_pid;
 	evt->base.on_pid = NULL;
 	if (f) {
 		if (evt->base.type==GF_FEVT_USER) {
+			GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("USER EVENT!!!\n"));
 			if (f->freg->process_event && f->event_target) {
+				GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("DO SOMETHING IN THE IF!!!\n"));
 				gf_mx_p(f->tasks_mx);
+				GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("Passed gf_mx_p(f->tasks_mx);\n"));
 				f->freg->process_event(f, evt);
+				GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("Passed f->freg->process_event(f, evt);\n"));
 				gf_mx_v(f->tasks_mx);
+				GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("Passed gf_mx_v(f->tasks_mx);\n"));
 				ret = GF_TRUE;
 			}
 		}
@@ -4087,8 +4096,10 @@ Bool gf_fs_fire_event(GF_FilterSession *fs, GF_Filter *f, GF_FilterEvent *evt, B
 			gf_mx_p(f->tasks_mx);
 			if (f->num_output_pids && upstream) ret = GF_TRUE;
 			else if (f->num_input_pids && !upstream) ret = GF_TRUE;
-			if (ret)
+			if (ret){
+				GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("SENDING EVENT!!!\n"));
 				gf_filter_send_event(f, evt, upstream);
+			}
 			gf_mx_v(f->tasks_mx);
 		}
 	} else {

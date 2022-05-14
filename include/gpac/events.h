@@ -76,6 +76,15 @@ typedef struct
 	u32 key_states;
 } GF_EventMouse;
 
+typedef struct
+{	
+	/*GF_EVENT_EDIT*/
+	u8 type;
+
+	s32 rotation;
+}
+GF_EventEdit;
+
 /*! Mouse event structure
 	event proc return value: ignored
 */
@@ -413,6 +422,7 @@ typedef union
 	GF_EventAddonConnect addon_connect;
 	GF_EventSensorRequest activate_sensor;
 	GF_EventClipboard clipboard;
+	GF_EventEdit edit;
 } GF_Event;
 
 /*! @} */

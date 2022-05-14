@@ -1156,6 +1156,7 @@ existing:
 		if (odm->mo->speed != FIX_ONE) gf_odm_set_speed(odm, odm->mo->speed, GF_TRUE);
 	}
 	if ((odm->mo->type==GF_MEDIA_OBJECT_VIDEO) && scene->is_dynamic_scene && !odm->parentscene->root_od->addon) {
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, (" calling force size to video"));
 		gf_scene_force_size_to_video(scene, odm->mo);
 	}
 	else if (!odm->scene_ns->source_filter && (odm->flags & GF_ODM_PASSTHROUGH))  {
@@ -1291,7 +1292,10 @@ void gf_scene_force_size_to_video(GF_Scene *scene, GF_MediaObject *mo)
 	u32 w, h;
 	gf_scene_get_video_size(mo, &w, &h);
 
-	if (w && h) gf_scene_force_size(scene, w, h);
+	if (w && h) {
+	GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, (" w && h\n"));
+	gf_scene_force_size(scene, w, h);
+	}
 }
 
 #ifndef GPAC_DISABLE_VRML
@@ -1407,6 +1411,7 @@ static void set_media_url(GF_Scene *scene, SFURL *media_url, GF_Node *node,  MFU
 				gf_scene_get_video_size(odm->mo, &w, &h);
 				if (w && h) {
 					scene->force_size_set = 0;
+					GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, (" w && h com force_size_set = 0\n"));
 					gf_sg_set_scene_size_info(scene->graph, w, h, 1);
 					gf_scene_force_size(scene, w, h);
 				}
@@ -2094,7 +2099,10 @@ void gf_scene_select_object(GF_Scene *scene, GF_ObjectManager *odm)
 		}
 		mt->startTime = gf_scene_get_time(scene);
 		gf_node_changed((GF_Node *)mt, NULL);
-		if (odm->mo) gf_scene_force_size_to_video(scene, odm->mo);
+		if (odm->mo) {
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("MO: calling force size to video"));
+		gf_scene_force_size_to_video(scene, odm->mo);
+		}
 		scene->selected_service_id = odm->ServiceID;
 		return;
 	}
@@ -2383,12 +2391,16 @@ void gf_scene_force_size(GF_Scene *scene, u32 width, u32 height)
 		width /= 2;
 		height /= 2;
 		/*if we already processed a force size in 360, don't do it again*/
-		if (scene->force_size_set)
+/*  		if (scene->force_size_set){
+			GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[Scene] DON'T Force scene because already processed before.\n"));
 			return;
+
+		}  */
 
 #ifndef GPAC_DISABLE_VRML
 		scene->force_size_set = GF_TRUE;
 		if (! scene->srd_type) {
+			GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[Scene] srd_type\n"));
 			GF_Node *node = gf_sg_find_node_by_name(scene->graph, "DYN_GEOM1");
 			if (node && (((M_Sphere *)node)->radius == FIX_ONE)) {
 				u32 radius = MAX(width, height)/4;
@@ -2401,6 +2413,7 @@ void gf_scene_force_size(GF_Scene *scene, u32 width, u32 height)
 	}
 
 	if (scene->is_dynamic_scene) {
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[Scene] is_dynamic_scene\n"));
 		u32 serv_w=0, serv_h=0;
 		GF_FilterPid *pid = gf_filter_get_ipid(scene->compositor->filter, 0);
 		const GF_PropertyValue *prop;
@@ -2466,6 +2479,7 @@ void gf_scene_force_size(GF_Scene *scene, u32 width, u32 height)
 		}
 	}
 	else if (scene->root_od->parentscene && scene->root_od->parentscene->is_dynamic_scene) {
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[Scene] parentscene\n"));
 		gf_sg_set_scene_size_info(scene->root_od->parentscene->graph, width, height, gf_sg_use_pixel_metrics(scene->root_od->parentscene->graph));
 		if (!scene->root_od->parentscene) {
 			if (width && height) {
@@ -2476,12 +2490,17 @@ void gf_scene_force_size(GF_Scene *scene, u32 width, u32 height)
 	}
 
 	if (scene->vr_type) {
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[Scene] vr_type 2\n"));
 		gf_sg_set_scene_size_info(scene->graph, 0, 0, GF_TRUE);
 	} else {
 		gf_sg_set_scene_size_info(scene->graph, width, height, GF_TRUE);
 	}
-	if (scene->srd_type)
+	if (scene->srd_type){
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[Scene] srd_type 2\n"));
 		gf_scene_regenerate(scene);
+
+	}
+		
 
 #ifndef GPAC_DISABLE_VRML
 	IS_UpdateVideoPos(scene);
