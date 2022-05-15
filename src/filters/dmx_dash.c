@@ -1851,6 +1851,7 @@ static s32 dashdmx_algo_js(void *udta, u32 group, u32 base_group, Bool force_low
 	JS_SetPropertyStr(ctx->js_ctx, args[3], "center_viewport_x", JS_NewFloat64(ctx->js_ctx, stats->center_viewport_x) );
 	JS_SetPropertyStr(ctx->js_ctx, args[3], "center_viewport_y", JS_NewFloat64(ctx->js_ctx, stats->center_viewport_y) );
 	JS_SetPropertyStr(ctx->js_ctx, args[3], "list_cvp_x_per_frame", JS_NewString(ctx->js_ctx, (char *) stats->list_cvp_x_per_frame) );
+	JS_SetPropertyStr(ctx->js_ctx, args[3], "list_cvp_y_per_frame", JS_NewString(ctx->js_ctx, (char *) stats->list_cvp_y_per_frame) );
 	JS_SetPropertyStr(ctx->js_ctx, args[3], "yaw", JS_NewFloat64(ctx->js_ctx, stats->yaw) );
 	JS_SetPropertyStr(ctx->js_ctx, args[3], "pitch", JS_NewFloat64(ctx->js_ctx, stats->pitch) );
 	ret = JS_Call(ctx->js_ctx, ctx->rate_fun, ctx->js_obj, 4, args);

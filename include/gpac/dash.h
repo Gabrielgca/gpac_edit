@@ -1137,6 +1137,8 @@ typedef struct
 	u32 total_rate;
 	/*List of the x center of the viewport on the last frame*/
 	char list_cvp_x_per_frame[500];
+	/*List of the x center of the viewport on the last frame*/
+	char list_cvp_y_per_frame[500];
 } GF_DASHCustomAlgoInfo;
 
 /*! Callback function for custom rate adaptation

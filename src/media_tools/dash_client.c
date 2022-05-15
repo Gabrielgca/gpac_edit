@@ -262,13 +262,17 @@ struct __dash_group
 
 	/*List of the x center of the viewport on the last frame*/
 	char list_cvp_x_per_frame[500];
+	/*List of the y center of the viewport on the last frame*/
+	char list_cvp_y_per_frame[500];
 
 	/*List of the x center of the viewport on the last frame*/
 	char list_result_cvp_x_per_frame[500];
+	/*List of the y center of the viewport on the last frame*/
+	char list_result_cvp_y_per_frame[500];
 
 	u32 count_cvp_x;
-	/*List of the y center of the viewport on the last frame*/
-	GF_List *list_cvp_y_per_frame;
+	u32 count_cvp_y;
+
 
 	/*pointer to adaptation set*/
 	GF_MPD_AdaptationSet *adaptation_set;
@@ -8234,6 +8238,7 @@ static s32 dash_do_rate_adaptation_custom(GF_DashClient *dash, GF_DASH_Group *gr
 	stats.center_viewport_x = group->center_viewport_x;
 	stats.center_viewport_y = group->center_viewport_y;
 	strcpy(stats.list_cvp_x_per_frame, group->list_result_cvp_x_per_frame);
+	strcpy(stats.list_cvp_y_per_frame, group->list_result_cvp_y_per_frame);
 	stats.yaw = group->yaw;
 	stats.pitch = group->pitch;
 	stats.active_quality_idx = group->active_rep_index;
@@ -10010,6 +10015,9 @@ GF_Err gf_dash_group_set_visible_rect(GF_DashClient *dash, u32 idx, u32 min_x, u
 	if (group->list_cvp_x_per_frame[0] == '/0'){
 		group->count_cvp_x = 0;
 	}
+	if (group->list_cvp_y_per_frame[0] == '/0'){
+		group->count_cvp_y = 0;
+	}
 	if (!group) return GF_BAD_PARAM;
 
 	if (!min_x && !max_x && !min_y && !max_y) {
@@ -10050,19 +10058,37 @@ GF_Err gf_dash_group_set_visible_rect(GF_DashClient *dash, u32 idx, u32 min_x, u
 	sprintf(group->list_cvp_x_per_frame, "%.2f,", cvp_x);
 	strcat(aux_list_cvp_x_per_frame, group->list_cvp_x_per_frame);
 	strcpy(group->list_cvp_x_per_frame, aux_list_cvp_x_per_frame);
-
+	
 	memset(aux_list_cvp_x_per_frame,'\0',500);
 
-	group->count_cvp_x++;
 
-	if (group->count_cvp_x == rep->framerate->num) 
+	char aux_list_cvp_y_per_frame [500];
+
+	memset(aux_list_cvp_y_per_frame,'\0',500);
+	strcpy(aux_list_cvp_y_per_frame, group->list_cvp_y_per_frame);
+	sprintf(group->list_cvp_y_per_frame, "%.2f,", cvp_y);
+	strcat(aux_list_cvp_y_per_frame, group->list_cvp_y_per_frame);
+	strcpy(group->list_cvp_y_per_frame, aux_list_cvp_y_per_frame);
+	
+	memset(aux_list_cvp_y_per_frame,'\0',500);
+
+	group->count_cvp_x++;
+	group->count_cvp_y++;
+
+	if (group->count_cvp_x == rep->framerate->num && group->count_cvp_x == rep->framerate->num) 
 	{
 		group->count_cvp_x = 0;
 		strcpy(group->list_result_cvp_x_per_frame, group->list_cvp_x_per_frame);
 		group->list_result_cvp_x_per_frame[strlen(group->list_result_cvp_x_per_frame)-2] = '\0';
 		memset(group->list_cvp_x_per_frame,'\0', sizeof(group->list_cvp_x_per_frame));
+
+		group->count_cvp_y = 0;
+		strcpy(group->list_result_cvp_y_per_frame, group->list_cvp_y_per_frame);
+		group->list_result_cvp_y_per_frame[strlen(group->list_result_cvp_y_per_frame)-2] = '\0';
+		memset(group->list_cvp_y_per_frame,'\0', sizeof(group->list_cvp_y_per_frame));
 	}
-	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] List Viewport: [%.*s]\n",(int) sizeof(group->list_cvp_x_per_frame), group->list_cvp_x_per_frame));
+	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] List Viewport X: [%.*s]\n",(int) sizeof(group->list_cvp_x_per_frame), group->list_cvp_x_per_frame));
+	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] List Viewport Y: [%.*s]\n",(int) sizeof(group->list_cvp_y_per_frame), group->list_cvp_y_per_frame));
 
 
 	group->yaw = yaw;
