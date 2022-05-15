@@ -2897,6 +2897,7 @@ enum
 	JSF_EVENT_USER_MOVE_ALIGN_Y,
 	JSF_EVENT_USER_CAPTION,
 	JSF_EVENT_USER_EDIT_ROTATION,
+	JSF_EVENT_USER_DRAWN_FRAME,
 };
 
 static Bool jsf_check_evt(u32 evt_type, u8 ui_type, int magic)
@@ -3076,6 +3077,13 @@ static Bool jsf_check_evt(u32 evt_type, u8 ui_type, int magic)
 				default:
 					break;
 				}
+		case GF_EVENT_DRAWN_FRAME:
+			switch (magic) {
+				case JSF_EVENT_USER_DRAWN_FRAME:
+					return GF_TRUE;
+				default:
+					break;
+				}
 		case GF_EVENT_SET_CAPTION:
 			if (magic==JSF_EVENT_USER_CAPTION) return GF_TRUE;
 			return GF_FALSE;
@@ -3236,6 +3244,7 @@ static JSValue jsf_event_set_prop(JSContext *ctx, JSValueConst this_val, JSValue
 	case JSF_EVENT_USER_MOVE_Y: return JS_ToInt32(ctx, &evt->user_event.event.move.y, value) ? GF_JS_EXCEPTION(ctx) : JS_UNDEFINED;
 	case JSF_EVENT_USER_MOVE_RELATIVE: return JS_ToInt32(ctx, &evt->user_event.event.move.relative, value) ? GF_JS_EXCEPTION(ctx) : JS_UNDEFINED;
 	case JSF_EVENT_USER_EDIT_ROTATION: return JS_ToInt32(ctx, &evt->user_event.event.edit.rotation, value) ? GF_JS_EXCEPTION(ctx) : JS_UNDEFINED;
+	case JSF_EVENT_USER_DRAWN_FRAME: return JS_ToInt32(ctx, &evt->user_event.event.drawn_frame.frame_number, value) ? GF_JS_EXCEPTION(ctx) : JS_UNDEFINED;
 	case JSF_EVENT_USER_MOVE_ALIGN_X:
 	case JSF_EVENT_USER_MOVE_ALIGN_Y:
 		if (JS_ToInt32(ctx, &ival, value)) return GF_JS_EXCEPTION(ctx);
@@ -3397,7 +3406,8 @@ static JSValue jsf_event_get_prop(JSContext *ctx, JSValueConst this_val, int mag
 	case JSF_EVENT_USER_MOVE_ALIGN_Y: return JS_NewInt32(ctx, evt->user_event.event.move.align_y);
 	
 	case JSF_EVENT_USER_EDIT_ROTATION: return JS_NewInt32(ctx, evt->user_event.event.edit.rotation);
-
+	case JSF_EVENT_USER_DRAWN_FRAME: return JS_NewInt32(ctx, evt->user_event.event.drawn_frame.frame_number);
+	
 	case JSF_EVENT_USER_CAPTION:
 		return JS_NewString(ctx, evt->user_event.event.caption.caption ? evt->user_event.event.caption.caption : "");
 	}
@@ -3483,6 +3493,8 @@ static const JSCFunctionListEntry jsf_event_funcs[] =
     JS_CGETSET_MAGIC_DEF("caption", jsf_event_get_prop, jsf_event_set_prop, JSF_EVENT_USER_CAPTION),
 	
 	JS_CGETSET_MAGIC_DEF("edit_rotation", jsf_event_get_prop, jsf_event_set_prop, JSF_EVENT_USER_EDIT_ROTATION),
+
+	JS_CGETSET_MAGIC_DEF("drawn_frame", jsf_event_get_prop, jsf_event_set_prop, JSF_EVENT_USER_DRAWN_FRAME),
 	
 };
 

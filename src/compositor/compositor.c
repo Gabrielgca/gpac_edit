@@ -2420,8 +2420,16 @@ static Bool gf_sc_draw_scene(GF_Compositor *compositor)
 	gf_list_reset(compositor->cached_groups_queue);
 #endif
 	GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[Compositor] Frame %d - drawing done\n", compositor->frame_number));
+	GF_Event evt;
 
-	/*only send the resize notification once the frame has been dra*/
+	evt.type = GF_EVENT_DRAWN_FRAME;
+	evt.drawn_frame.frame_number = compositor->frame_number;
+
+	GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[Compositor] Sending event GF_EVENT_DRAWN_FRAME\n"));
+	gf_sc_send_event(compositor, &evt);
+	GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[Compositor] Event GF_EVENT_DRAWN_FRAME SENT\n"));
+
+	/*only send the resize notification once the frame has been drawn*/
 	if (compositor->recompute_ar) {
 		compositor_send_resize_event(compositor, NULL, 0, 0, 0, 1);
 		compositor->recompute_ar = 0;

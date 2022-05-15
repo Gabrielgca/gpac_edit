@@ -1553,8 +1553,6 @@ typedef enum
 	GF_FEVT_ENCODE_HINTS,
 	/*! NTP source clock send by other services (eg from TS to dash using TEMI) */
 	GF_FEVT_NTP_REF,
-	
-	GF_FEVT_EDIT,
 } GF_FEventType;
 
 /*! type: the type of the event*/

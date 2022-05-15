@@ -85,6 +85,16 @@ typedef struct
 }
 GF_EventEdit;
 
+
+typedef struct
+{	
+	/* GF_EVENT_DRAWN_FRAME*/
+	u8 type;
+
+	u64 frame_number;
+}
+GF_EventDrawnFrame;
+
 /*! Mouse event structure
 	event proc return value: ignored
 */
@@ -423,6 +433,7 @@ typedef union
 	GF_EventSensorRequest activate_sensor;
 	GF_EventClipboard clipboard;
 	GF_EventEdit edit;
+	GF_EventDrawnFrame drawn_frame;
 } GF_Event;
 
 /*! @} */
