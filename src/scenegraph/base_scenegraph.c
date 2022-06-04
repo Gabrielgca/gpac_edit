@@ -32,6 +32,7 @@
 #include <gpac/nodes_x3d.h>
 #include <gpac/events.h>
 #include <gpac/nodes_svg.h>
+#include <gpac/compositor.h>
 
 #ifdef GPAC_HAS_QJS
 #include "qjs_common.h"
@@ -1348,7 +1349,7 @@ void gf_node_set_private(GF_Node*p, void *pr)
 	p->sgprivate->UserPrivate = pr;
 }
 GF_EXPORT
-GF_Err gf_node_set_callback_function(GF_Node *p, void (*TraverseNode)(GF_Node *node, void *render_stack, Bool is_destroy) )
+GF_Err gf_node_set_callback_function(GF_Node *p, void (*TraverseNode)(GF_Node *node, void *render_stack, Bool is_destroy, GF_Compositor *compositor) )
 {
 	assert(p);
 	p->sgprivate->UserCallback = TraverseNode;

@@ -4080,15 +4080,10 @@ Bool gf_fs_fire_event(GF_FilterSession *fs, GF_Filter *f, GF_FilterEvent *evt, B
 	evt->base.on_pid = NULL;
 	if (f) {
 		if (evt->base.type==GF_FEVT_USER) {
-			GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("USER EVENT!!!\n"));
 			if (f->freg->process_event && f->event_target) {
-				GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("DO SOMETHING IN THE IF!!!\n"));
 				gf_mx_p(f->tasks_mx);
-				GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("Passed gf_mx_p(f->tasks_mx);\n"));
 				f->freg->process_event(f, evt);
-				GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("Passed f->freg->process_event(f, evt);\n"));
 				gf_mx_v(f->tasks_mx);
-				GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("Passed gf_mx_v(f->tasks_mx);\n"));
 				ret = GF_TRUE;
 			}
 		}

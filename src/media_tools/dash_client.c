@@ -10087,8 +10087,10 @@ GF_Err gf_dash_group_set_visible_rect(GF_DashClient *dash, u32 idx, u32 min_x, u
 		group->list_result_cvp_y_per_frame[strlen(group->list_result_cvp_y_per_frame)-2] = '\0';
 		memset(group->list_cvp_y_per_frame,'\0', sizeof(group->list_cvp_y_per_frame));
 	}
-	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] List Viewport X: [%.*s]\n",(int) sizeof(group->list_cvp_x_per_frame), group->list_cvp_x_per_frame));
-	GF_LOG(GF_LOG_INFO, GF_LOG_DASH, ("[DASH - GABRIEL] List Viewport Y: [%.*s]\n",(int) sizeof(group->list_cvp_y_per_frame), group->list_cvp_y_per_frame));
+	//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[DASH - GABRIEL] FPS: [%d]\n", rep->framerate->num));
+	
+	//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[DASH - GABRIEL] List Viewport X: [%.*s]\n",(int) sizeof(group->list_cvp_x_per_frame), group->list_cvp_x_per_frame));
+	//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("[DASH - GABRIEL] List Viewport Y: [%.*s]\n",(int) sizeof(group->list_cvp_y_per_frame), group->list_cvp_y_per_frame));
 
 
 	group->yaw = yaw;

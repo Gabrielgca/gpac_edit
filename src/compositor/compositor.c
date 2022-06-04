@@ -3427,6 +3427,10 @@ static Bool gf_sc_on_event_ex(GF_Compositor *compositor , GF_Event *event, Bool 
 		//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("EDIT ROTATION: %d\n", event->edit.rotation));
 		compositor_handle_navigation(compositor, event);
 		break;
+	case GF_EVENT_VISIBILITY_HINT:
+		GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("GF_EVENT_VISIBILITY_HINT FROM UI!!\n"));
+		//GF_LOG(GF_LOG_INFO, GF_LOG_COMPOSE, ("EDIT ROTATION: %d\n", event->edit.rotation));
+		break;
 	case GF_EVENT_SHOWHIDE:
 		if (!from_user) {
 			/*switch fullscreen off!!!*/

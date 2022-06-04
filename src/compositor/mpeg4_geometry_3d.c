@@ -34,6 +34,7 @@
 
 #include <gpac/options.h>
 #include <gpac/mediaobject.h>
+#include <gpac/compositor.h>
 
 void drawable_3d_base_traverse(GF_Node *n, void *rs, Bool is_destroy, void (*build_shape)(GF_Node*,Drawable3D *,GF_TraverseState *) )
 {
@@ -189,6 +190,8 @@ static void get_tx_coords_from_angle(GF_TraverseState *tr_state, GF_TextureHandl
 	*max_coord= (u32) (max_tx*dim);
 }
 
+GF_Compositor *compositor_saved;
+
 static void TraverseSphere(GF_Node *n, void *rs, Bool is_destroy)
 {
 	GF_TraverseState *tr_state = (GF_TraverseState *)rs;
@@ -209,15 +212,38 @@ static void TraverseSphere(GF_Node *n, void *rs, Bool is_destroy)
 		get_tx_coords_from_angle(tr_state, txh, GF_TRUE, &min_x, &max_x);
 		get_tx_coords_from_angle(tr_state, txh, GF_FALSE, &min_y, &max_y);
 		
-		gf_mo_hint_visible_rect(txh->stream, min_x, max_x, min_y, max_y);
 		GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[Compositor] Visible texture rectangle of sphere is %u,%u,%u,%u\n", min_x, max_x, min_y, max_y));
+		gf_mo_hint_visible_rect(txh->stream, min_x, max_x, min_y, max_y);
+
+		if (compositor_saved != NULL){
+		GF_Event evt;
+		evt.type = GF_EVENT_VISIBILITY_HINT;	
+		evt.visibility_hint.max_x = max_x;
+		evt.visibility_hint.max_y = max_y;
+		evt.visibility_hint.min_x = min_x;
+		evt.visibility_hint.min_y = min_y;
+
+		GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[Compositor] frame TraverseSphere %d\n", compositor_saved->frame_number));
+		GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[Compositor] Sending event GF_EVENT_VISIBILITY_HINT\n"));
+		gf_sc_send_event(compositor_saved, &evt);
+		}
+
+		GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[Compositor] Event GF_EVENT_VISIBILITY_HINT SENT\n"));
 	}
 }
 
 void compositor_init_sphere(GF_Compositor *compositor, GF_Node *node)
 {
+	GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[Compositor] Init Sphere...\n"));
+	save_compositor(compositor);
 	drawable_3d_new(node);
 	gf_node_set_callback_function(node, TraverseSphere);
+}
+
+void save_compositor(GF_Compositor *compositor_to_save){
+	GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[Compositor]Saving Compositor...\n"));
+	compositor_saved = compositor_to_save;
+	GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[Compositor]Compositor Saved!\n"));
 }
 
 static void build_shape_point_set(GF_Node *n, Drawable3D *stack, GF_TraverseState *tr_state)

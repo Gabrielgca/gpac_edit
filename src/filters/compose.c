@@ -666,7 +666,9 @@ static Bool compose_process_event(GF_Filter *filter, const GF_FilterEvent *evt)
 
 	case GF_FEVT_USER:
 		return gf_sc_user_event(gf_filter_get_udta(filter), (GF_Event *) &evt->user_event.event);
-
+	case GF_FEVT_VISIBILITY_HINT:
+		GF_LOG(GF_LOG_DEBUG, GF_LOG_COMPOSE, ("[COMPOSE - GABRIEL] COMPOSE GF_FEVT_VISIBILITY_HINT\n"));
+		return GF_TRUE;
 	default:
 		break;
 	}
