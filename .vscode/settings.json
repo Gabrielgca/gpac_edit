@@ -15,6 +15,9 @@
         "system_error": "c",
         "xlocale": "c",
         "sstream": "c",
-        "xiosbase": "c"
+        "xiosbase": "c",
+        "network.h": "c",
+        "mediaobject.h": "c",
+        "compositor.h": "c"
     }
 }
