@@ -1,8 +1,8 @@
 export default
 [
         {
-        "frame" : 4,
-        "region_of_interest": [500,1000]
+        "frame" : 5,
+        "region_of_interest": [630,1000]
         },
         {
         "frame" : 10,
