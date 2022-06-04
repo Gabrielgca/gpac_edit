@@ -66,6 +66,9 @@ GF_Err gf_sc_load(GF_Compositor *compositor);
 /*! unloads compositor
 \param compositor the compositor object to unload. The structure memory is not freed
 */
+
+void save_compositor(GF_Compositor *compositor_to_save);
+
 void gf_sc_unload(GF_Compositor *compositor);
 
 /*! sets simulation frame rate. The compositor framerate impacts the frequency at which time nodes and animations are updated,

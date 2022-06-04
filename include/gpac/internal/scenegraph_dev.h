@@ -40,6 +40,8 @@
 
 #include <gpac/thread.h>
 
+#include <gpac/compositor.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

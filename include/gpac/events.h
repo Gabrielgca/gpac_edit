@@ -95,6 +95,17 @@ typedef struct
 }
 GF_EventDrawnFrame;
 
+
+typedef struct
+{	
+	/* GF_EVENT_VISIBILITY_HINT*/
+	u8 type;
+
+	u32 max_x,max_y,min_x,min_y;
+}
+GF_EventVisibilityHint;
+
+
 /*! Mouse event structure
 	event proc return value: ignored
 */
@@ -434,6 +445,7 @@ typedef union
 	GF_EventClipboard clipboard;
 	GF_EventEdit edit;
 	GF_EventDrawnFrame drawn_frame;
+	GF_EventVisibilityHint visibility_hint;
 } GF_Event;
 
 /*! @} */
