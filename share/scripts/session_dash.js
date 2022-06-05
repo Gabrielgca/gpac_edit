@@ -61,7 +61,7 @@ session.set_event_fun( (evt) => {
 			case GF_EVENT_DRAWN_FRAME:
 				print("Drawn frame on JS");
 				print("frame number: " + evt.drawn_frame);
-				print("center of the viewport: " + cvp_x);
+				
 				frame_nb = evt.drawn_frame;
 				handleDrawnFrame(frame_nb);
 				break;
@@ -73,28 +73,47 @@ session.set_event_fun( (evt) => {
 	}
 	});
 
-const handleDrawnFrame = (frame_nb) => {
+const handleDrawnFrame = (frame_nb) => 
+{
+	// Check if there is another edit to be done, if the current frame has an edit on the ediInfo file 
+	// and if the last frame already had an edit (this is needed because the last frame is redrawn when the edit happens)
+	let [angleCVPX, angleCVPY] = convert_pixel_coord_to_angle(cvp_x, 0);
+	
 	if (editInfoJSON[next_edit] && editInfoJSON[next_edit]["frame"] == frame_nb && last_frame_with_edit != frame_nb){
 		
 		let nearest_region_of_interest = Infinity;
 		let index_nearest_region_of_interest = 0;
-		
+
 		for (let i in editInfoJSON[next_edit]["region_of_interest"]){
-			print("region "+ i + " : "+ editInfoJSON[next_edit]["region_of_interest"][i] - cvp_x);
+			//print("region "+ i + " : "+ (editInfoJSON[next_edit]["region_of_interest"][i] - cvp_x));
 			let result = Math.abs(editInfoJSON[next_edit]["region_of_interest"][i] - cvp_x);
+			///print("result: " + result);
 			if (result < nearest_region_of_interest){
 				index_nearest_region_of_interest = i;
+				nearest_region_of_interest = result;
 			}
 		}
 		print("nearest_region_of_interest: " + editInfoJSON[next_edit]["region_of_interest"][index_nearest_region_of_interest])
-		let distance = editInfoJSON[next_edit]["region_of_interest"][index_nearest_region_of_interest] - cvp_x;
+		//let distance = editInfoJSON[next_edit]["region_of_interest"][index_nearest_region_of_interest] - cvp_x;
+		//print("distance : " + distance);
+		
+		let [rotationX, rotationY] = convert_pixel_coord_to_radians(editInfoJSON[next_edit]["region_of_interest"][index_nearest_region_of_interest], 0);
+		let [rotationCVPX, rotationCVPY] = convert_pixel_coord_to_radians(cvp_x, 0);
+		let distance = rotationX - rotationCVPX;
+		let [angleEDITX, angleEDITY] = convert_pixel_coord_to_angle(editInfoJSON[next_edit]["region_of_interest"][index_nearest_region_of_interest], 0);
+
+		//print("rotationCVPX : " + rotationCVPX);
+		//print("rotationY : " + rotationY);
+		print("angleEDITX : " + angleEDITX);
+		
+		print("angleEDITX - angleCVPX : " + (angleEDITX - angleCVPX));
 		if (distance > 0){
-			print("distance is negative");
-			fireRotation(distance);
+			print("distance is posivite");
+			fireRotation(-1*distance);
 		}
 		
 		else {
-			print("distance is posivite");
+			print("distance is negative");
 			fireRotation(-1*distance);
 		}
 		
@@ -125,15 +144,23 @@ const handleVisibilityHint = (evt) => {
 	print("max_y: " + evt.user_max_y);
 	print(`Resolution ${WidthResolution}x${HeigthResolution}`)
 
-	let max_x = evt.user_min_x;
-	let min_x = evt.user_max_x;
-	let max_y = evt.user_min_y;
-	let min_y = evt.user_max_y;
+	let max_x = evt.user_max_x;
+	let min_x = evt.user_min_x;
+	let max_y = evt.user_max_y;
+	let min_y = evt.user_min_y;
 
 	cvp_x = min_x > max_x ? min_x + (WidthResolution + max_x - min_x)/2 : min_x + (max_x - min_x)/2;
 
 	cvp_y = min_y > max_y ? min_y + (HeigthResolution + max_y - min_y)/2 :  min_y + (max_y - min_y)/2;
 
+	cvp_x = cvp_x > WidthResolution ? cvp_x - WidthResolution : cvp_x;
+	cvp_y = cvp_y > HeigthResolution ? cvp_y - HeigthResolution : cvp_y;
+	
+	print("center of the viewport [x - pixel]: " + cvp_x);
+	let [angleCVPX, angleCVPY] = convert_pixel_coord_to_angle(cvp_x, cvp_y);
+	print("center of the viewport [x - angle] : " + angleCVPX);
+	let [rotationCVPX, rotationCVPY] = convert_pixel_coord_to_radians(cvp_x, 0);
+	print("center of the viewport [x - radians] : " + rotationCVPX);
 
 	center_viewport_x.push(cvp_x);
 	center_viewport_y.push(cvp_y);
@@ -150,16 +177,34 @@ const handleVisibilityHint = (evt) => {
 
 	lr_height = linearRegression(center_viewport_y, frame_nb_array);
 
-	print("A_WIDTH: " + lr_width.slope + ",B_WIDTH: " + lr_width.intercept);
-	print("A_HEIGHT: " + lr_height.slope + ",B_HEIGHT: " + lr_height.intercept);
+	//print("A_WIDTH: " + lr_width.slope + ",B_WIDTH: " + lr_width.intercept);
+	//print("A_HEIGHT: " + lr_height.slope + ",B_HEIGHT: " + lr_height.intercept);
 
 	new_width = funcao_linear(lr_width.slope, lr_width.intercept, frame_nb_array[frame_nb_array.length -1] + frame_per_second);
 	new_height = funcao_linear(lr_height.slope, lr_height.intercept, frame_nb_array[frame_nb_array.length -1] + frame_per_second);
 
 }
 
-/* Fire an edit event to do a rotation on the video camera. The rotation happens in the next frame.
- * @param rotation -> how many pixels to rotate. negative values rotate to the left and positive to the right.
+
+const convert_pixel_coord_to_angle  = (cvp_x, cvp_y) => 
+{
+	let yaw = ((cvp_x + 0.5) / WidthResolution - 0.5) * 360;
+	let pitch =  -1*((cvp_y + 0.5) / HeigthResolution - 0.5) * 180;
+
+	return [yaw, pitch];
+}
+
+const convert_pixel_coord_to_radians  = (cvp_x, cvp_y) => 
+{
+	let yaw = ((cvp_x + 0.5) / WidthResolution - 0.5) * 2 * 3.14159;
+	let pitch =  -1*((cvp_y + 0.5) / HeigthResolution - 0.5) * 3.14159;
+	
+	return [yaw, pitch];
+}
+
+/** 
+ * Fire an edit event to do a rotation on the video camera. The rotation happens in the next frame.
+ * @param {Integer} rotation RADIANS How many pixels to rotate. negative values rotate to the right and positive to the left.
  */
 const fireRotation = (rotation) => {
 	let f_evt = new FilterEvent(GF_FEVT_USER);
@@ -282,12 +327,12 @@ let HeigthResolution;
 
 dashin.rate_adaptation = function (group_idx, base_group_idx, force_lower_complexity, stats)
 {
-	print("###############################################")
+	/* print("###############################################")
 	print(`Getting called in custom algo ! group ${group_idx} base_group ${base_group_idx} force_lower_complexity ${force_lower_complexity}`);
-	print('Stats: ' + JSON.stringify(stats));
+	print('Stats: ' + JSON.stringify(stats)); */
 	
 	let group = get_group(group_idx);
-	print('Group: ' + JSON.stringify(group));
+	//print('Group: ' + JSON.stringify(group));
 
 	let base_group = get_group(base_group_idx);
 
