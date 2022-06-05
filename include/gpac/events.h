@@ -81,7 +81,7 @@ typedef struct
 	/*GF_EVENT_EDIT*/
 	u8 type;
 
-	s32 rotation;
+	Double rotation;
 }
 GF_EventEdit;
 

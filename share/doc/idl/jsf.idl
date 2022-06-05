@@ -956,7 +956,7 @@ attribute unsigned long move_alignx;
 /*! see \ref GF_EventMove*/
 attribute unsigned long move_aligny;
 /*! see \ref GF_EventEdit*/
-attribute unsigned long edit_rotation;
+attribute float edit_rotation;
 /*! see \ref GF_EventDrawnFrame*/
 attribute unsigned long drawn_frame;
 
