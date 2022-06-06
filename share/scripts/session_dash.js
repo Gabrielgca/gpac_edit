@@ -14,6 +14,8 @@ dashin.groups = [];
 
 let compositor = null;
 
+const PI = 3.15169;
+
 print(JSON.stringify(editInfoJSON));
 
 
@@ -75,47 +77,60 @@ session.set_event_fun( (evt) => {
 
 const handleDrawnFrame = (frame_nb) => 
 {
+	let [CvpXAngle, CvpYAngle] = convert_pixel_coord_to_angle(cvp_x, 0);
+	let [CvpXRadians, CvpYRadians] = convert_pixel_coord_to_radians(cvp_x, 0);
+	
 	// Check if there is another edit to be done, if the current frame has an edit on the ediInfo file 
 	// and if the last frame already had an edit (this is needed because the last frame is redrawn when the edit happens)
-	let [angleCVPX, angleCVPY] = convert_pixel_coord_to_angle(cvp_x, 0);
-	
 	if (editInfoJSON[next_edit] && editInfoJSON[next_edit]["frame"] == frame_nb && last_frame_with_edit != frame_nb){
 		
-		let nearest_region_of_interest = Infinity;
-		let index_nearest_region_of_interest = 0;
+		let abs_dist_nearest_roi = Infinity;
+		let dist_nearest_roi;
+		let index_dist_nearest_roi = 0;
+		let direction = 1;
 
 		for (let i in editInfoJSON[next_edit]["region_of_interest"]){
 			//print("region "+ i + " : "+ (editInfoJSON[next_edit]["region_of_interest"][i] - cvp_x));
-			let result = Math.abs(editInfoJSON[next_edit]["region_of_interest"][i] - cvp_x);
-			///print("result: " + result);
-			if (result < nearest_region_of_interest){
-				index_nearest_region_of_interest = i;
-				nearest_region_of_interest = result;
+			let [ROIXRadians, ROIYRadians] = convert_pixel_coord_to_radians(editInfoJSON[next_edit]["region_of_interest"][i]*WidthResolution, 0);
+			//print("ROIXRadians: " + ROIXRadians);
+			let curr_dist_roi = ROIXRadians - CvpXRadians;
+			//print("curr_dist_roi: " + curr_dist_roi);
+
+			if (curr_dist_roi > PI){
+				print("MAIOR QUE PI");
+				curr_dist_roi = 2*PI - curr_dist_roi;
+				direction = -1;
+			}
+			else if (curr_dist_roi < -1*PI){
+				print("MENOR QUE -PI");
+				curr_dist_roi = curr_dist_roi + 2*PI;
+			}
+			//print("abs_dist_nearest_roi: " + abs_dist_nearest_roi);
+
+			if (Math.abs(curr_dist_roi) < abs_dist_nearest_roi){
+				index_dist_nearest_roi = i;
+				abs_dist_nearest_roi = Math.abs(curr_dist_roi);
+				dist_nearest_roi = curr_dist_roi;
 			}
 		}
-		print("nearest_region_of_interest: " + editInfoJSON[next_edit]["region_of_interest"][index_nearest_region_of_interest])
-		//let distance = editInfoJSON[next_edit]["region_of_interest"][index_nearest_region_of_interest] - cvp_x;
-		//print("distance : " + distance);
+		let nearest_region_of_interest = editInfoJSON[next_edit]["region_of_interest"][index_dist_nearest_roi]*WidthResolution;
 		
-		let [rotationX, rotationY] = convert_pixel_coord_to_radians(editInfoJSON[next_edit]["region_of_interest"][index_nearest_region_of_interest], 0);
-		let [rotationCVPX, rotationCVPY] = convert_pixel_coord_to_radians(cvp_x, 0);
-		let distance = rotationX - rotationCVPX;
-		let [angleEDITX, angleEDITY] = convert_pixel_coord_to_angle(editInfoJSON[next_edit]["region_of_interest"][index_nearest_region_of_interest], 0);
+		print("nearest_region_of_interest: " + nearest_region_of_interest);
+		print("dist_nearest_roi: " + dist_nearest_roi);
+		
+		let [angleEDITX, angleEDITY] = convert_pixel_coord_to_angle(nearest_region_of_interest, 0);
 
-		//print("rotationCVPX : " + rotationCVPX);
-		//print("rotationY : " + rotationY);
 		print("angleEDITX : " + angleEDITX);
 		
-		print("angleEDITX - angleCVPX : " + (angleEDITX - angleCVPX));
-		if (distance > 0){
+		print("angleEDITX - angleCVPX : " + (angleEDITX - CvpXAngle));
+
+		if (dist_nearest_roi > 0){
 			print("distance is posivite");
-			fireRotation(-1*distance);
 		}
-		
 		else {
 			print("distance is negative");
-			fireRotation(-1*distance);
 		}
+		fireRotation(-1*direction*dist_nearest_roi);
 		
 	}
 }
@@ -154,7 +169,7 @@ const handleVisibilityHint = (evt) => {
 	cvp_y = min_y > max_y ? min_y + (HeigthResolution + max_y - min_y)/2 :  min_y + (max_y - min_y)/2;
 
 	cvp_x = cvp_x > WidthResolution ? cvp_x - WidthResolution : cvp_x;
-	cvp_y = cvp_y > HeigthResolution ? cvp_y - HeigthResolution : cvp_y;
+	cvp_y = cvp_y > HeigthResolution ? cvp_y - HeigthResolution : cvp_y;	
 	
 	print("center of the viewport [x - pixel]: " + cvp_x);
 	let [angleCVPX, angleCVPY] = convert_pixel_coord_to_angle(cvp_x, cvp_y);
@@ -204,7 +219,7 @@ const convert_pixel_coord_to_radians  = (cvp_x, cvp_y) =>
 
 /** 
  * Fire an edit event to do a rotation on the video camera. The rotation happens in the next frame.
- * @param {Integer} rotation RADIANS How many pixels to rotate. negative values rotate to the right and positive to the left.
+ * @param {Float} rotation How many RADIANS to rotate. negative values rotate to the right and positive to the left.
  */
 const fireRotation = (rotation) => {
 	let f_evt = new FilterEvent(GF_FEVT_USER);
