@@ -14,7 +14,7 @@ dashin.groups = [];
 
 let compositor = null;
 
-const PI = 3.15169;
+const PI = 3.14159;
 
 print(JSON.stringify(editInfoJSON));
 
@@ -88,30 +88,38 @@ const handleDrawnFrame = (frame_nb) =>
 		let dist_nearest_roi;
 		let index_dist_nearest_roi = 0;
 		let direction = 1;
+		let flagDirection = false;
 
 		for (let i in editInfoJSON[next_edit]["region_of_interest"]){
 			//print("region "+ i + " : "+ (editInfoJSON[next_edit]["region_of_interest"][i] - cvp_x));
 			let [ROIXRadians, ROIYRadians] = convert_pixel_coord_to_radians(editInfoJSON[next_edit]["region_of_interest"][i]*WidthResolution, 0);
 			//print("ROIXRadians: " + ROIXRadians);
 			let curr_dist_roi = ROIXRadians - CvpXRadians;
-			//print("curr_dist_roi: " + curr_dist_roi);
-
 			if (curr_dist_roi > PI){
 				print("MAIOR QUE PI");
 				curr_dist_roi = 2*PI - curr_dist_roi;
-				direction = -1;
+				flagDirection = true;
 			}
 			else if (curr_dist_roi < -1*PI){
 				print("MENOR QUE -PI");
 				curr_dist_roi = curr_dist_roi + 2*PI;
 			}
 			//print("abs_dist_nearest_roi: " + abs_dist_nearest_roi);
-
+			
 			if (Math.abs(curr_dist_roi) < abs_dist_nearest_roi){
 				index_dist_nearest_roi = i;
-				abs_dist_nearest_roi = Math.abs(curr_dist_roi);
+				abs_dist_nearest_roi = Math.abs(curr_dist_roi);		
 				dist_nearest_roi = curr_dist_roi;
+				
+				if (flagDirection){
+					direction = -1;
+				}
+				else {
+					direction = 1;
+				}
+				print("dist_nearest_roi: " + dist_nearest_roi);
 			}
+			flagDirection = false;
 		}
 		let nearest_region_of_interest = editInfoJSON[next_edit]["region_of_interest"][index_dist_nearest_roi]*WidthResolution;
 		
