@@ -1,6 +1,6 @@
  import { Sys as sys } from 'gpaccore';
  //import * as editInfo from 'C:\\Repositorios\\gpac_public\\share\\scripts\\editInfo.json';
- import editInfoJSON from 'C:\\Repositorios\\gpac_public\\share\\scripts\\edit_files\\editInfo.js';
+ import editEditInfoJSON from 'C:\\Repositorios\\gpac_public\\share\\scripts\\edit_files\\editInfo.js';
 
  _gpac_log_name="ABR-EDIT";
 
@@ -16,8 +16,14 @@ let compositor = null;
 
 const PI = 3.14159;
 
-print(JSON.stringify(editInfoJSON));
+print(JSON.stringify(editEditInfoJSON));
 
+const configEditInfoJSON = editEditInfoJSON.config;
+
+const editEditInfoJSON = editEditInfoJSON.edit;
+
+print(JSON.stringify(configEditInfoJSON));
+print(JSON.stringify(editEditInfoJSON));
 
 session.set_new_filter_fun( (f) => {
 	print("new filter " + f.name);
@@ -82,17 +88,18 @@ const handleDrawnFrame = (frame_nb) =>
 	
 	// Check if there is another edit to be done, if the current frame has an edit on the ediInfo file 
 	// and if the last frame already had an edit (this is needed because the last frame is redrawn when the edit happens)
-	if (editInfoJSON[next_edit] && editInfoJSON[next_edit]["frame"] == frame_nb && last_frame_with_edit != frame_nb){
+	if (editEditInfoJSON[next_edit] && editEditInfoJSON[next_edit]["frame"] == frame_nb && last_frame_with_edit != frame_nb){
 		
 		let abs_dist_nearest_roi = Infinity;
 		let dist_nearest_roi;
 		let index_dist_nearest_roi = 0;
+		
 		let direction = 1;
 		let flagDirection = false;
 
-		for (let i in editInfoJSON[next_edit]["region_of_interest"]){
-			//print("region "+ i + " : "+ (editInfoJSON[next_edit]["region_of_interest"][i] - cvp_x));
-			let [ROIXRadians, ROIYRadians] = convert_pixel_coord_to_radians(editInfoJSON[next_edit]["region_of_interest"][i]*WidthResolution, 0);
+		for (let i in editEditInfoJSON[next_edit]["region_of_interest"]){
+			//print("region "+ i + " : "+ (editEditInfoJSON[next_edit]["region_of_interest"][i] - cvp_x));
+			let [ROIXRadians, ROIYRadians] = convert_pixel_coord_to_radians(editEditInfoJSON[next_edit]["region_of_interest"][i]["ROI_theta"]*WidthResolution, 0);
 			//print("ROIXRadians: " + ROIXRadians);
 			let curr_dist_roi = ROIXRadians - CvpXRadians;
 			if (curr_dist_roi > PI){
@@ -121,7 +128,7 @@ const handleDrawnFrame = (frame_nb) =>
 			}
 			flagDirection = false;
 		}
-		let nearest_region_of_interest = editInfoJSON[next_edit]["region_of_interest"][index_dist_nearest_roi]*WidthResolution;
+		let nearest_region_of_interest = editEditInfoJSON[next_edit]["region_of_interest"][index_dist_nearest_roi]["ROI_theta"]*WidthResolution;
 		
 		print("nearest_region_of_interest: " + nearest_region_of_interest);
 		print("dist_nearest_roi: " + dist_nearest_roi);
